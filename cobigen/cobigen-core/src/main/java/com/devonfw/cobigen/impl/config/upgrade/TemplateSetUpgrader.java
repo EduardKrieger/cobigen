@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -17,8 +18,14 @@ import org.slf4j.LoggerFactory;
 
 import com.devonfw.cobigen.api.constants.ConfigurationConstants;
 import com.devonfw.cobigen.api.exception.InvalidConfigurationException;
-import com.devonfw.cobigen.impl.config.entity.io.ContextConfiguration;
+import com.devonfw.cobigen.impl.config.constant.ContextConfigurationVersion;
+//import com.devonfw.cobigen.impl.config.entity.io.ContextConfiguration;
 import com.devonfw.cobigen.impl.config.entity.io.Trigger;
+import com.devonfw.cobigen.impl.config.entity.io.v3_0.Link;
+import com.devonfw.cobigen.impl.config.entity.io.v3_0.Links;
+import com.devonfw.cobigen.impl.config.entity.io.v3_0.Tag;
+import com.devonfw.cobigen.impl.config.entity.io.v3_0.Tags;
+import com.devonfw.cobigen.impl.config.entity.io.v3_0.ContextConfiguration;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
@@ -52,8 +59,8 @@ public class TemplateSetUpgrader {
 	/**
 	 * Creates a new {@link TemplateSetUpgrader} instance
 	 */
-	public TemplateSetUpgrader(Path templatesLocation) {
-		this.templatesLocation = templatesLocation;
+	public TemplateSetUpgrader(){//Path templatesLocation) {
+		this.templatesLocation = null;//templatesLocation;
 		this.mapperFactory = new DefaultMapperFactory.Builder().useAutoMapping(true).mapNulls(true).build();
 		this.mapperFactory
 				.classMap(com.devonfw.cobigen.impl.config.entity.io.ContainerMatcher.class,
@@ -84,7 +91,11 @@ public class TemplateSetUpgrader {
 		if (this.templatesLocation == null) {
 			throw new Exception("Templates location cannot be null!");
 		}
-
+		//validatefunktion
+		// context at current location, just split it
+		// search for Context in Folder
+		// create new Folder Structures
+		//
 		if (this.templatesLocation.endsWith(ConfigurationConstants.TEMPLATES_FOLDER)) {
 			Path cobigenTemplates = this.templatesLocation.resolve(ConfigurationConstants.COBIGEN_TEMPLATES);
 			if (Files.exists(cobigenTemplates)) {
@@ -92,6 +103,8 @@ public class TemplateSetUpgrader {
 						.resolve(ConfigurationConstants.CONTEXT_CONFIG_FILENAME);
 				if (Files.exists(contextFile)) {
 					ContextConfiguration contextConfiguration = getContextConfiguration(contextFile);
+					List<com.devonfw.cobigen.impl.config.entity.io.v3_0.ContextConfiguration> test = splitContext(contextConfiguration);
+					System.out.println("Hallo");
 					if (contextConfiguration != null) {
 						// create new template set folder
 						Path templateSetsPath = Files.createDirectory(this.templatesLocation.getParent()
@@ -104,16 +117,16 @@ public class TemplateSetUpgrader {
 						}
 
 						// backup of old files
-						Path backupFolder = templatesLocation.resolve("backup");
+						Path backupPath = templatesLocation.resolve("backup");
 						if (this.templatesLocation.endsWith(ConfigurationConstants.TEMPLATES_FOLDER)) {
-							backupFolder = templatesLocation.getParent().resolve("backup");
+							backupPath = templatesLocation.getParent().resolve("backup");
 						}
-						File f = backupFolder.toFile();
-						if (!f.exists()) {
-							f.mkdir();
+						File backupFolder = backupPath.toFile();
+						if (!backupFolder.exists()) {
+							backupFolder.mkdir();
 						}
 						try {
-							FileUtils.moveDirectoryToDirectory(cobigenTemplates.getParent().toFile(), f, false);
+							FileUtils.moveDirectoryToDirectory(cobigenTemplates.getParent().toFile(), backupFolder, false);
 						} catch (IOException e) {
 							LOG.error("Error copying and deleting the old template files", e);
 							throw e;
@@ -131,6 +144,143 @@ public class TemplateSetUpgrader {
 			LOG.info("The path {} is no valid templates location.", this.templatesLocation);
 		}
 
+	}
+
+	/**
+	 * Upgrades the template structure from v2.1 to the new structure from v3.0. The monolithic pom and context files will be split
+	 * into multiple files corresponding to every template set that will be created.
+	 * @throws Exception
+	 */
+	public ConfigurationUpgradeResult upgradeTemplatesToTemplateSets(ContextConfiguration context) throws Exception {
+
+		ConfigurationUpgradeResult result = new ConfigurationUpgradeResult();
+		List<com.devonfw.cobigen.impl.config.entity.io.v3_0.ContextConfiguration> test = splitContext(context);
+
+
+	}
+
+	/**
+	 * Upgrades the template structure from v2.1 to the new structure from v3.0. The monolithic pom and context files will be split
+	 * into multiple files corresponding to every template set that will be created.
+	 * @throws Exception
+	 */
+	public void upgradeTemplatesToTemplateSetsAufgeäumt() throws Exception {
+		// FileTree Walker
+		// speichert Path zu Context und splitted
+		// gucken ob Templates existieren sonst custom template pfad getten
+
+		// speichert Util Folder
+		// speichert Path zu der Pom
+
+
+	}
+
+
+
+	protected List<com.devonfw.cobigen.impl.config.entity.io.v3_0.ContextConfiguration> splitContext(ContextConfiguration monolitic){
+		List<com.devonfw.cobigen.impl.config.entity.io.v3_0.ContextConfiguration> splittedContexts = new ArrayList<>();
+		List<Trigger> triggerList = monolitic.getTrigger();
+		for(Trigger trigger : triggerList) {
+			com.devonfw.cobigen.impl.config.entity.io.v3_0.ContextConfiguration contextConfiguration3_0 = new com.devonfw.cobigen.impl.config.entity.io.v3_0.ContextConfiguration();
+			com.devonfw.cobigen.impl.config.entity.io.v3_0.Trigger trigger3_0 = new com.devonfw.cobigen.impl.config.entity.io.v3_0.Trigger();
+			trigger3_0.setId(trigger.getId());
+			trigger3_0.setInputCharset(trigger.getInputCharset());
+			trigger3_0.setType(trigger.getType());
+			trigger3_0.setTemplateFolder(trigger.getTemplateFolder());
+
+			List<com.devonfw.cobigen.impl.config.entity.io.v3_0.Matcher> v3MList = mapper.mapAsList(trigger.getMatcher(),
+					com.devonfw.cobigen.impl.config.entity.io.v3_0.Matcher.class);
+			List<com.devonfw.cobigen.impl.config.entity.io.v3_0.ContainerMatcher> v3CMList = mapper.mapAsList(
+					trigger.getContainerMatcher(), com.devonfw.cobigen.impl.config.entity.io.v3_0.ContainerMatcher.class);
+			trigger3_0.getContainerMatcher().addAll(v3CMList);
+			trigger3_0.getMatcher().addAll(v3MList);
+			contextConfiguration3_0.getTrigger().add(trigger3_0);
+			Tags tags = new Tags();
+			Tag tag = new Tag();
+			tag.setName("PLACEHOLDER---This tag was inserted through the upgrade process and has to be changed manually---PLACEHOLDER");
+			tags.getTag().add(tag);
+			contextConfiguration3_0.setTags(tags);
+			Links links = new Links();
+			Link link = new Link();
+			link.setUrl("PLACEHOLDER---This tag was inserted through the upgrade process and has to be changed manually---PLACEHOLDER");
+			links.getLink().add(link);
+			contextConfiguration3_0.setLinks(links);
+			contextConfiguration3_0.setVersion(new BigDecimal("3.0"));
+			splittedContexts.add(contextConfiguration3_0);
+		}
+		//TODO diese Funktion vielleicht schöner schreiben mit mehr mapper
+		return splittedContexts;
+	}
+
+	protected boolean writeContext(Path contextPath, com.devonfw.cobigen.impl.config.entity.io.v3_0.ContextConfiguration contextConfiguration) {
+		if(contextPath.resolve(ConfigurationConstants.CONTEXT_CONFIG_FILENAME).toFile().exists()) {
+			LOG.error("Context.xml already exist in this folder");
+			return false;
+		}
+		try {
+			Marshaller marshaller = JAXBContext.newInstance("com.devonfw.cobigen.impl.config.entity.io.v3_0")
+					.createMarshaller();
+			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+			marshaller.marshal(contextConfiguration, contextPath.toFile());
+		} catch (JAXBException e) {
+			throw new InvalidConfigurationException("Parsing of the context file provided some XML errors", e);
+
+		}
+		return true;
+	}
+
+	protected Model readMonolithicPom(Path pomPath) throws FileNotFoundException, IOException, XmlPullParserException {
+		MavenXpp3Reader reader = new MavenXpp3Reader();
+		Model model = null;
+		try(
+				FileInputStream pomInputStream = new FileInputStream(pomPath.resolve("pom.xml").toFile());
+		){
+			try {
+				model = reader.read(pomInputStream);
+			}catch (IOException e) {
+				LOG.error("IOError while reading the monolithic pom file", e);
+				pomInputStream.close();
+				throw e;
+			} catch (XmlPullParserException e) {
+				LOG.error("XMLError while parsing the monolitic pom file", e);
+				pomInputStream.close();
+				throw e;
+			}
+		}
+		return model;
+	}
+
+	protected boolean writePom(Path pomPath, Model monolithicPom, com.devonfw.cobigen.impl.config.entity.io.v3_0.ContextConfiguration contextConfiguration) throws FileNotFoundException, IOException {
+		if(pomPath.resolve("pom.xml").toFile().exists()) {
+			LOG.error("Context.xml already exist in this folder");
+			return false;
+		}
+		// Pom.xml creation
+		MavenXpp3Writer writer = new MavenXpp3Writer();
+
+		Model m = new Model();
+		Parent p = new Parent();
+		p.setArtifactId(monolithicPom.getArtifactId());
+		p.setGroupId(monolithicPom.getGroupId());
+		p.setVersion(monolithicPom.getVersion());
+		m.setParent(p);
+		m.setDependencies(monolithicPom.getDependencies());
+		contextConfiguration.getTrigger().get(0).getId().replace('_', '-');
+		m.setName("PLACEHOLDER---Replace this text with a correct template name---PLACEHOLDER");
+		try (
+				FileOutputStream pomOutputStream = new FileOutputStream(pomPath.resolve("pom.xml").toFile());
+		){
+			try {
+				writer.write(new FileOutputStream(pomPath.resolve("pom.xml").toFile()), m);
+			} catch (FileNotFoundException e) {
+				LOG.error("Error while creating the new v3_0 pom file", e);
+				throw e;
+			} catch (IOException e) {
+				LOG.error("IOError while writing the new v3_0 pom file", e);
+				throw e;
+			}
+		}
+		return true;
 	}
 
 	/**
@@ -202,6 +352,16 @@ public class TemplateSetUpgrader {
 
 		// add trigger to context
 		triggerList.add(trigger3_0);
+		Tags tags = new Tags();
+		Tag tag = new Tag();
+		tag.setName("PLACEHOLDER---This tag was inserted through the upgrade process and has to be changed manually---PLACEHOLDER");
+		tags.getTag().add(tag);
+		contextConfiguration.setTags(tags);
+		Links links = new Links();
+		Link link = new Link();
+		link.setUrl("PLACEHOLDER---This tag was inserted through the upgrade process and has to be changed manually---PLACEHOLDER");
+		links.getLink().add(link);
+		contextConfiguration.setLinks(links);
 
 		// write context.xml
 		Path newContextPath = templateSetPath.resolve(ConfigurationConstants.TEMPLATE_RESOURCE_FOLDER);
@@ -219,21 +379,24 @@ public class TemplateSetUpgrader {
 		MavenXpp3Reader reader = new MavenXpp3Reader();
 		MavenXpp3Writer writer = new MavenXpp3Writer();
 		Model mMonolithicPom;
-		FileInputStream pomInputStream = new FileInputStream(cobigenTemplates.resolve("pom.xml").toFile());
-		try {
-			mMonolithicPom = reader.read(pomInputStream);
-		} catch (FileNotFoundException e) {
-			LOG.error("Monolitic pom file could not be found", e);
-			pomInputStream.close();
-			throw e;
-		} catch (IOException e) {
-			LOG.error("IOError while reading the monolithic pom file", e);
-			pomInputStream.close();
-			throw e;
-		} catch (XmlPullParserException e) {
-			LOG.error("XMLError while parsing the monolitic pom file", e);
-			pomInputStream.close();
-			throw e;
+		try(
+				FileInputStream pomInputStream = new FileInputStream(cobigenTemplates.resolve("pom.xml").toFile());
+		){
+			try {
+				mMonolithicPom = reader.read(pomInputStream);
+			} catch (FileNotFoundException e) {
+				LOG.error("Monolitic pom file could not be found", e);
+				pomInputStream.close();
+				throw e;
+			} catch (IOException e) {
+				LOG.error("IOError while reading the monolithic pom file", e);
+				pomInputStream.close();
+				throw e;
+			} catch (XmlPullParserException e) {
+				LOG.error("XMLError while parsing the monolitic pom file", e);
+				pomInputStream.close();
+				throw e;
+			}
 		}
 		Model m = new Model();
 		Parent p = new Parent();
@@ -244,23 +407,19 @@ public class TemplateSetUpgrader {
 		m.setDependencies(mMonolithicPom.getDependencies());
 		m.setArtifactId(trigger.getId().replace('_', '-'));
 		m.setName("PLACEHOLDER---Replace this text with a correct template name---PLACEHOLDER");
-		FileOutputStream pomOutputStream = new FileOutputStream(templateSetPath.resolve("pom.xml").toFile());
-		try {
-			writer.write(new FileOutputStream(templateSetPath.resolve("pom.xml").toFile()), m);
-		} catch (FileNotFoundException e) {
-			LOG.error("Error while creating the new v3_0 pom file", e);
-			pomInputStream.close();
-			pomOutputStream.close();
-			throw e;
-		} catch (IOException e) {
-			LOG.error("IOError while writing the new v3_0 pom file", e);
-			pomInputStream.close();
-			pomOutputStream.close();
-			throw e;
+		try (
+				FileOutputStream pomOutputStream = new FileOutputStream(templateSetPath.resolve("pom.xml").toFile());
+		){
+			try {
+				writer.write(new FileOutputStream(templateSetPath.resolve("pom.xml").toFile()), m);
+			} catch (FileNotFoundException e) {
+				LOG.error("Error while creating the new v3_0 pom file", e);
+				throw e;
+			} catch (IOException e) {
+				LOG.error("IOError while writing the new v3_0 pom file", e);
+				throw e;
+			}
 		}
-		pomInputStream.close();
-		pomOutputStream.close();
-
 	}
 
 }

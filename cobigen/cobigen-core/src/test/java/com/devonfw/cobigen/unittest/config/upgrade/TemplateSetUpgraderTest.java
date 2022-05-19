@@ -1,11 +1,13 @@
 package com.devonfw.cobigen.unittest.config.upgrade;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -29,6 +31,8 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.logging.Log;
+import org.custommonkey.xmlunit.XMLTestCase;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -86,6 +90,7 @@ public class TemplateSetUpgraderTest extends AbstractUnitTest {
 
 	/**
 	 * Test the correct folder creation //TODO
+	 *
 	 * @throws Exception
 	 */
 	@Test
@@ -98,12 +103,12 @@ public class TemplateSetUpgraderTest extends AbstractUnitTest {
 		Path templateSetsAdapted = templateSetsPath.resolve(ConfigurationConstants.ADAPTED_FOLDER);
 		assertThat(templateSetsPath).exists();
 		assertThat(templateSetsAdapted).exists();
-		// hier noch besser testen //TODO
 
 	}
 
 	/**
-	 * Tests if the Template files are copied correct into the new template set and into the backup folder
+	 * Tests if the Template files are copied correct into the new template set and
+	 * into the backup folder
 	 *
 	 * @throws Exception
 	 */
@@ -118,22 +123,19 @@ public class TemplateSetUpgraderTest extends AbstractUnitTest {
 		TemplateSetUpgrader templateSetUpgrader = new TemplateSetUpgrader(this.templateLocation);
 		templateSetUpgrader.upradeTemplatesToTemplateSets();
 
-
 		Path backupPath = this.templateLocation.getParent().resolve("backup")
-				.resolve(ConfigurationConstants.TEMPLATES_FOLDER)
-				.resolve(ConfigurationConstants.COBIGEN_TEMPLATES)
+				.resolve(ConfigurationConstants.TEMPLATES_FOLDER).resolve(ConfigurationConstants.COBIGEN_TEMPLATES)
 				.resolve(ConfigurationConstants.TEMPLATE_RESOURCE_FOLDER);
 		Set<String> backupPathFilesSet = new HashSet<>(Arrays.asList(backupPath.toFile().list()));
 		Path newTemplatesPath = this.templateLocation.getParent().resolve(ConfigurationConstants.TEMPLATE_SETS_FOLDER)
 				.resolve(ConfigurationConstants.ADAPTED_FOLDER);
 		Set<String> NewPathFilesSet = new HashSet<>(Arrays.asList(newTemplatesPath.toFile().list()));
 
-		assertEquals(OldTemplatesFileCount -1, NewPathFilesSet.size());
+		assertEquals(OldTemplatesFileCount - 1, NewPathFilesSet.size());
 		assertEquals(OldTemplatesFileCount, backupPathFilesSet.size());
 
 		for (String s : OldPathFilesSet) {
-			if(! s.equals("context.xml"))
-			{
+			if (!s.equals("context.xml")) {
 				assertTrue(NewPathFilesSet.contains(s));
 				NewPathFilesSet.remove(s);
 			}
@@ -145,26 +147,14 @@ public class TemplateSetUpgraderTest extends AbstractUnitTest {
 		assertEquals(backupPathFilesSet.size(), 0);
 	}
 
-//  @Test
-//  public void testTemplateSetUpgradeContextLocation() throws Exception{
-//	  TemplateSetUpgrader templateSetUpgrader = new TemplateSetUpgrader(this.templateLocation);
-//	  templateSetUpgrader.upradeTemplatesToTemplateSets();
-//
-//	  Path newTemplatesPath = this.templateLocation.getParent().resolve(ConfigurationConstants.TEMPLATE_SETS_FOLDER);
-//	  newTemplatesPath = newTemplatesPath.resolve(ConfigurationConstants.ADAPTED_FOLDER);
-//	  for(String s: newTemplatesPath.toFile().list()) {
-//		  Path newContextPath = newTemplatesPath.resolve(s+"/"+ConfigurationConstants.TEMPLATE_RESOURCE_FOLDER);
-//		  Set<String> NewPathFilesSet= new HashSet<>(Arrays.asList(newContextPath.toFile().list()));
-//		  assertTrue(NewPathFilesSet.contains(s));
-//	}
-//  }
 
+	// test Name difference with - und _
 	/**
 	 * Tests the correct location for the created context.xml and if the files and whether the file corresponds to the v3.0 schema
 	 * @throws Exception
 	 */
 	@Test
-	public void testTemplateSetUpgradeContextSplit() throws Exception {
+	public void testTemplateSetUpgradeContextSplit() throws Exception { //throws Exception {
 		TemplateSetUpgrader templateSetUpgrader = new TemplateSetUpgrader(this.templateLocation);
 		templateSetUpgrader.upradeTemplatesToTemplateSets();
 
@@ -174,24 +164,27 @@ public class TemplateSetUpgraderTest extends AbstractUnitTest {
 		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 		InputStream schemaStream = getClass().getResourceAsStream("/schema/v3.0/contextConfiguration.xsd");
 		StreamSource schemaSourceStream = new StreamSource(schemaStream);
-		Schema schema = schemaFactory.newSchema(schemaSourceStream);
-		Validator validator = schema.newValidator();
+		Validator validator = null;
+		try {
+			Schema schema = schemaFactory.newSchema(schemaSourceStream);
+			validator = schema.newValidator();
+		} catch (SAXException e) {
+			fail("Exception show that validator has found an fault");		}
 
-		for (String s : newTemplatesPath.toFile().list()) {
-			Path newContextPath = newTemplatesPath.resolve(s + "/" + ConfigurationConstants.TEMPLATE_RESOURCE_FOLDER);
-			newContextPath = newContextPath.resolve("context.xml");
-			assertThat(newContextPath.toFile().exists());
-			StreamSource contextStream = new StreamSource(newContextPath.toFile());
-			try {
-				validator.validate(contextStream);
-			} catch (SAXException e) {
-				fail("Exception show that validator has found an fault");
-				contextStream.getInputStream().close();
-				schemaStream.close();
-			}
+			for (String s : newTemplatesPath.toFile().list()) {
+				Path newContextPath = newTemplatesPath.resolve(s + "/" + ConfigurationConstants.TEMPLATE_RESOURCE_FOLDER);
+				newContextPath = newContextPath.resolve("context.xml");
+				assertThat(newContextPath.toFile().exists());
+				StreamSource contextStream = new StreamSource(newContextPath.toFile());
+				try {
+					validator.validate(contextStream);
+				} catch (SAXException e) {
+					fail("Exception show that validator has found an fault");
+					contextStream.getInputStream().close();
+					schemaStream.close();
+				}
 
 		}
-		schemaStream.close();
+
 	}
 }
-	// Teste ob alle Dependencies da sind, utils ressources da sind und pom muss da mit src main java

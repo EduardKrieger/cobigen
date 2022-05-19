@@ -1,9 +1,11 @@
 package com.devonfw.cobigen.unittest.config.upgrade;
 
+import static com.github.stefanbirkner.systemlambda.SystemLambda.restoreSystemProperties;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.FileReader;
+import java.nio.file.Path;
 
 import org.custommonkey.xmlunit.XMLTestCase;
 import org.custommonkey.xmlunit.XMLUnit;
@@ -41,20 +43,26 @@ public class ContextConfigurationUpgraderTest extends AbstractUnitTest {
   public void testCorrectUpgrade_v2_0_TO_LATEST() throws Exception {
 
     // preparation
-    File tmpTargetConfig = this.tempFolder.newFile(ConfigurationConstants.CONTEXT_CONFIG_FILENAME);
+	File templatesFolder =this.tempFolder.newFolder(ConfigurationConstants.CONFIG_PROPERTY_TEMPLATES_PATH);
+	//Path cobigen_templates = templatesFolder.toPath().resolve(ConfigurationConstants.COBIGEN_TEMPLATES);
+	Path tempFolder = this.tempFolder.getRoot().toPath();
+	File cobigen_templates = this.tempFolder.newFolder(ConfigurationConstants.CONFIG_PROPERTY_TEMPLATES_PATH,ConfigurationConstants.COBIGEN_TEMPLATES);
+    File tmpTargetConfig = this.tempFolder.newFile(tempFolder.relativize(cobigen_templates.toPath())
+    		.resolve(ConfigurationConstants.CONTEXT_CONFIG_FILENAME).toString());
     File sourceTestdata = new File(testFileRootPath + "valid-v2.0/" + ConfigurationConstants.CONTEXT_CONFIG_FILENAME);
     Files.copy(sourceTestdata, tmpTargetConfig);
 
     ContextConfigurationUpgrader sut = new ContextConfigurationUpgrader();
 
-    ContextConfigurationVersion version = sut.resolveLatestCompatibleSchemaVersion(this.tempFolder.getRoot().toPath());
+    ContextConfigurationVersion version = sut.resolveLatestCompatibleSchemaVersion(cobigen_templates.toPath());
     assertThat(version).as("Source Version").isEqualTo(ContextConfigurationVersion.v2_0);
 
-    sut.upgradeConfigurationToLatestVersion(this.tempFolder.getRoot().toPath(), BackupPolicy.ENFORCE_BACKUP);
+    sut.upgradeConfigurationToLatestVersion(cobigen_templates.toPath(), BackupPolicy.ENFORCE_BACKUP);
     assertThat(tmpTargetConfig.toPath().resolveSibling("context.bak.xml").toFile()).exists()
         .hasSameContentAs(sourceTestdata);
 
-    version = sut.resolveLatestCompatibleSchemaVersion(this.tempFolder.getRoot().toPath());
+    // hier wird auch der pfad verändert
+    version = sut.resolveLatestCompatibleSchemaVersion(cobigen_templates.toPath());
     assertThat(version).as("Target version").isEqualTo(ContextConfigurationVersion.getLatest());
 
     XMLUnit.setIgnoreWhitespace(true);
@@ -71,6 +79,9 @@ public class ContextConfigurationUpgraderTest extends AbstractUnitTest {
    */
   @Test
   public void testCorrectUpgrade_v2_1_TO_LATEST() throws Exception {
+//	    restoreSystemProperties(() -> {
+//	        File userHome = this.tmpFolder.newFolder("user-home");
+//	        System.setProperty("user.home", userHome.getAbsolutePath());
 
     // preparation
     File tmpTargetConfig = this.tempFolder.newFile(ConfigurationConstants.CONTEXT_CONFIG_FILENAME);

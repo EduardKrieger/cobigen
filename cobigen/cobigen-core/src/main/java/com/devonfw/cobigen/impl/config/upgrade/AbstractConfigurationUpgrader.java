@@ -211,7 +211,7 @@ public abstract class AbstractConfigurationUpgrader<VERSIONS_TYPE extends Enum<?
             createBackup(configurationFile, backupPolicy);
 
             // NotYetSupportedException
-            ConfigurationUpgradeResult result = performNextUpgradeStep(this.versions[i], rootNode);
+            ConfigurationUpgradeResult result = performNextUpgradeStep(this.versions[i], rootNode, configurationRoot);
             manualAdoptionsNecessary |= result.areManualAdoptionsNecessary();
 
             try (OutputStream out = Files.newOutputStream(configurationFile)) {
@@ -254,7 +254,7 @@ public abstract class AbstractConfigurationUpgrader<VERSIONS_TYPE extends Enum<?
    *         will be forwarded untouched to the user.
    */
   protected abstract ConfigurationUpgradeResult performNextUpgradeStep(VERSIONS_TYPE source,
-      Object previousConfigurationRootNode) throws Exception;
+      Object previousConfigurationRootNode, Path context) throws Exception;
 
   /**
    * Creates a backup of the given file. If ignoreFailedBackup is set to <code>true</code>, the backup will silently log

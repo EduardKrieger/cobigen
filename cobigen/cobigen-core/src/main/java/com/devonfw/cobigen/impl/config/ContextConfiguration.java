@@ -35,7 +35,7 @@ public class ContextConfiguration {
   private AbstractContextConfigurationReader contextConfigurationReader;
 
   /**
-   * Creates a new {@link ContextConfiguration} with the contents initially loaded from the context.xml
+   * Creates a new {@link new ContextConfiguration} with the contents initially loaded from the context.xml
    *
    * @param configRoot root path for the configuration of CobiGen
    * @throws InvalidConfigurationException thrown if the {@link File} is not valid with respect to the context.xsd

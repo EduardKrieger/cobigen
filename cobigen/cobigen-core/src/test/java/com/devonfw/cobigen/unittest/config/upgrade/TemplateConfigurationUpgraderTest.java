@@ -37,7 +37,6 @@ public class TemplateConfigurationUpgraderTest extends AbstractUnitTest {
    * @throws Exception test fails
    */
 
-  @Ignore
   @Test
   public void testCorrectUpgrade_v1_2_TO_LATEST() throws Exception {
 
@@ -72,7 +71,6 @@ public class TemplateConfigurationUpgraderTest extends AbstractUnitTest {
    *
    * @throws Exception test fails
    */
-  @Ignore
   @Test
   public void testCorrectUpgrade_v2_1_TO_LATEST() throws Exception {
 
@@ -85,7 +83,7 @@ public class TemplateConfigurationUpgraderTest extends AbstractUnitTest {
 
     TemplatesConfigurationVersion version = sut
         .resolveLatestCompatibleSchemaVersion(this.tempFolder.getRoot().toPath());
-    assertThat(version).as("Source Version").isEqualTo(TemplatesConfigurationVersion.v2_1);
+    assertThat(version).as("Source Version").isEqualTo(TemplatesConfigurationVersion.v5_0);
 
     sut.upgradeConfigurationToLatestVersion(this.tempFolder.getRoot().toPath(), BackupPolicy.ENFORCE_BACKUP);
     assertThat(tmpTargetConfig.toPath().resolveSibling("templates.bak.xml").toFile()).exists()

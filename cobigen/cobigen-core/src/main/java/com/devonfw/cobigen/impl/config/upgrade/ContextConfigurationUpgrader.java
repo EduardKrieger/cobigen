@@ -1,11 +1,14 @@
 package com.devonfw.cobigen.impl.config.upgrade;
 
 import java.math.BigDecimal;
+import java.nio.file.Path;
 
 import com.devonfw.cobigen.api.constants.ConfigurationConstants;
 import com.devonfw.cobigen.api.exception.NotYetSupportedException;
 import com.devonfw.cobigen.impl.config.ContextConfiguration;
 import com.devonfw.cobigen.impl.config.constant.ContextConfigurationVersion;
+import com.devonfw.cobigen.impl.config.reader.AbstractContextConfigurationReader;
+import com.devonfw.cobigen.impl.config.reader.ContextConfigurationReader;
 
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
@@ -32,7 +35,7 @@ public class ContextConfigurationUpgrader extends AbstractConfigurationUpgrader<
 
   @Override
   protected ConfigurationUpgradeResult performNextUpgradeStep(ContextConfigurationVersion source,
-      Object previousConfigurationRootNode) throws Exception {
+      Object previousConfigurationRootNode, Path context) throws Exception {
 
     ConfigurationUpgradeResult result = new ConfigurationUpgradeResult();
     MapperFactory mapperFactory;
@@ -69,14 +72,19 @@ public class ContextConfigurationUpgrader extends AbstractConfigurationUpgrader<
         mapperFactory = new DefaultMapperFactory.Builder().useAutoMapping(true).mapNulls(true).build();
         mapper = mapperFactory.getMapperFacade();
 
+
         upgradedConfig_3_0 = mapper.map(previousConfigurationRootNode,
             com.devonfw.cobigen.impl.config.entity.io.v3_0.ContextConfiguration.class);
         upgradedConfig_3_0.setVersion(new BigDecimal("3.0"));
 
-        result.setResultConfigurationJaxbRootNode(upgradedConfig_3_0);
-
-        TemplateSetUpgrader templateSetUpgrader = new TemplateSetUpgrader(ConfigurationConstants.DEFAULT_HOME);
-        templateSetUpgrader.upradeTemplatesToTemplateSets();
+        //result.setResultConfigurationJaxbRootNode(upgradedConfig_3_0);
+        // hier
+        //     AbstractContextConfigurationReader contextConfigurationReader = new ContextConfigurationReader(
+        //this.configurationHolder.readContextConfiguration().getConfigurationPath());
+        //auch mit result arbeiten und noch name und tag links sachen erwähnen
+        //templateFolder= context.getParent().getParent().getParent().getParent().getParent()
+        TemplateSetUpgrader templateSetUpgrader = new TemplateSetUpgrader();
+        templateSetUpgrader.upgradeTemplatesToTemplateSets(upgradedConfig_3_0);
         break;
       default:
         throw new NotYetSupportedException(
