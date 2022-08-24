@@ -15,16 +15,23 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.devonfw.cobigen.api.constants.ConfigurationConstants;
 import com.devonfw.cobigen.api.constants.TemplatesJarConstants;
 import com.devonfw.cobigen.api.util.MavenCoordinate;
 import com.devonfw.cobigen.api.util.TemplatesJarUtil;
 import com.devonfw.cobigen.unittest.config.common.AbstractUnitTest;
+import com.sun.org.apache.xpath.internal.operations.String;
 
 /**
  * Test suite for {@link TemplatesJarUtil}
  */
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(TemplatesJarUtil.class)
 public class TemplateJarDownloaderTest extends AbstractUnitTest {
 
   /** JUnit Rule to create and automatically cleanup temporarily files/folders */
@@ -65,6 +72,19 @@ public class TemplateJarDownloaderTest extends AbstractUnitTest {
 
     this.mavenCoordinatesList.clear();
     this.tempFolder.delete();
+  }
+
+  @Test
+  public void testMockito() {
+
+    // TemplatesJarUtil = PowerMockito.spy(TemplatesJarUtil.class);
+    PowerMockito.mockStatic(TemplatesJarUtil.class);
+    try {
+      PowerMockito.when(TemplatesJarUtil.class, TemplatesJarUtil.class.getMethod("downloadJar", String.class,
+          String.class, String.class, boolean.class, File.class)).thenReturn("Hallo");
+    } catch (Exception e) {
+    }
+
   }
 
   /**
