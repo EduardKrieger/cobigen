@@ -1,5 +1,9 @@
 package com.devonfw.cobigen.unittest.templates;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -15,28 +19,33 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.devonfw.cobigen.api.constants.ConfigurationConstants;
 import com.devonfw.cobigen.api.constants.TemplatesJarConstants;
 import com.devonfw.cobigen.api.util.MavenCoordinate;
 import com.devonfw.cobigen.api.util.TemplatesJarUtil;
 import com.devonfw.cobigen.unittest.config.common.AbstractUnitTest;
-import com.sun.org.apache.xpath.internal.operations.String;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 /**
  * Test suite for {@link TemplatesJarUtil}
  */
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(TemplatesJarUtil.class)
+
 public class TemplateJarDownloaderTest extends AbstractUnitTest {
 
   /** JUnit Rule to create and automatically cleanup temporarily files/folders */
   @Rule
   public TemporaryFolder tempFolder = new TemporaryFolder();
+
+  @Rule
+  public WireMockRule wireMockRule = // new WireMockRule(8894);
+      new WireMockRule(new WireMockConfiguration()); //
+  // No-args
+  // constructor
+  // defaults to
+  // port
+  // 8080
 
   /** List with MavenCoordinates for template downloader */
   public List<MavenCoordinate> mavenCoordinatesList;
@@ -75,16 +84,21 @@ public class TemplateJarDownloaderTest extends AbstractUnitTest {
   }
 
   @Test
-  public void testMockito() {
+  public void exampleTest() {
 
-    // TemplatesJarUtil = PowerMockito.spy(TemplatesJarUtil.class);
-    PowerMockito.mockStatic(TemplatesJarUtil.class);
-    try {
-      PowerMockito.when(TemplatesJarUtil.class, TemplatesJarUtil.class.getMethod("downloadJar", String.class,
-          String.class, String.class, boolean.class, File.class)).thenReturn("Hallo");
-    } catch (Exception e) {
-    }
+    MavenCoordinate m = createMavenCoordinateForDevon4jTemplates(null);
+    String Url = "/service/local/artifact/maven/" + "redirect?r=central-proxy&g=" + m.getGroupID() + "&a="
+        + m.getArtifactID() + "&v=" + m.getVersion();
+    stubFor(get(urlMatching(Url)).willReturn(aResponse().withStatus(503)
+        .withHeader("Content-Type", "application/java-archive").withBody("<response>SUCCESSEduard</response>")));
 
+    TemplatesJarUtil.downloadJar(m.getGroupID(), m.getArtifactID(), m.getVersion(), false, this.downloadedFolder);
+    // assertTrue(result.wasSuccessful());
+    System.out.println("Hallo");
+    // verify(WireMock.getRequestedFor(urlPathEqualTo(Url)).withRequestBody(matching(".*message-1234.*"))
+    // .withHeader("Content-Type", equalTo("application/java-archive")));
+    // verify(postRequestedFor(urlPathEqualTo("/my/resource")).withRequestBody(matching(".*message-1234.*"))
+    // .withHeader("Content-Type", equalTo("text/xml")));
   }
 
   /**

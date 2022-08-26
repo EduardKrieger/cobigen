@@ -68,6 +68,7 @@ public class TemplatesJarUtil {
           || isJarOutdated(jarFilePath.toFile(), mavenUrl, isDownloadSource, templatesDirectory)) {
 
         HttpURLConnection conn = initializeConnection(mavenUrl);
+        System.out.println(conn.getResponseMessage());
         try (InputStream inputStream = conn.getInputStream()) {
 
           fileName = conn.getURL().getFile().substring(conn.getURL().getFile().lastIndexOf("/") + 1);
