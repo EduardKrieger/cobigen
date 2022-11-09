@@ -10,8 +10,8 @@ xmlns:cc="http://capgemini.com/devonfw/cobigen/ContextConfiguration" xmlns:tns="
 
 <xs:complexType name="templateSetConfiguration">
 <xs:sequence>
-<xs:element name="templatesConfiguration" type="tc:templatesConfiguration"/>
-<xs:element name="contextConfiguration" type="cc:contextConfiguration"/>
+<xs:element ref="tc:templatesConfiguration"/>
+<xs:element ref="cc:contextConfiguration"/>
 </xs:sequence>
 </xs:complexType>
 

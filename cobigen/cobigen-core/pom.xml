@@ -215,7 +215,7 @@
             </goals>
             <configuration>
               <packageName>com.devonfw.cobigen.impl.config.entity.io.v3_0</packageName>
-              <outputDirectory>${project.build.directory}/generated-sources/config/v3_0</outputDirectory>
+              <outputDirectory>${project.build.directory}/generated-sources/config/v3.0</outputDirectory>
               <sources>
                 <source>${basedir}/src/main/resources/schema/v3.0</source>
               </sources>
