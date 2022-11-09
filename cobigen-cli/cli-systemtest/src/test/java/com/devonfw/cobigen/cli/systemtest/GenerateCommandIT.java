@@ -10,6 +10,8 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.devonfw.cobigen.api.constants.ConfigurationConstants;
+
 /**
  * Tests the usage of the generate command.
  */
@@ -61,6 +63,34 @@ public class GenerateCommandIT extends AbstractCliTest {
     execute(args, true, false, true);
 
     assertThat(baseProject.toPath().resolve("src/main/java/com/maven/project/sampledatamanagement/dataaccess/api/repo"))
+        .exists();
+  }
+
+  /**
+   *
+   * Todo
+   *
+   * @throws Exception test fails
+   */
+  @Test
+  public void generateFromEntityWithTemplateSetTest() throws Exception {
+
+    FileUtils.copyDirectory(new File(testFileRootPath + "templateSetsProject"), this.tmpProject.toFile());
+    File baseProject = this.tmpProject.resolve("maven.project/core/").toFile();
+    File templateSetsConfig = this.tmpProject.resolve(ConfigurationConstants.TEMPLATE_SETS_FOLDER).toFile();
+    String args[] = new String[6];
+    args[0] = "generate";
+    args[1] = this.entityInputFile.getAbsolutePath();
+    args[2] = "--increments";
+    args[3] = "0";
+    args[4] = "-tp";
+    args[5] = templateSetsConfig.getAbsolutePath();
+
+    execute(args, false);
+
+    assertThat(this.currentHome.resolve(ConfigurationConstants.CONFIG_PROPERTY_TEMPLATE_SETS_PATH)).exists();
+
+    assertThat(baseProject.toPath().resolve("src/main/java/com/maven/project/sampledatamanagement/logic/api/to"))
         .exists();
   }
 
