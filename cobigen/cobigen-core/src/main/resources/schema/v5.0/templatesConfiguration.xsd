@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema targetNamespace="http://capgemini.com/devonfw/cobigen/TemplatesConfiguration" xmlns:tns="http://capgemini.com/devonfw/cobigen/TemplatesConfiguration" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="5.0">
-
-  <xs:element name="templatesConfiguration">
-    <xs:complexType>
+<xs:element name="templatesConfiguration"/>
+    <xs:complexType name="templatesConfiguration">
       <xs:sequence>
         <xs:element name="templates" minOccurs="0" type="tns:templates" />
         <xs:element name="templateScans" minOccurs="0" type="tns:templateScans" />
@@ -11,7 +10,6 @@
       <xs:attribute name="templateEngine" use="optional" type="xs:string" default="FreeMarker"/>
       <xs:attribute name="version" use="required" type="xs:decimal" />
     </xs:complexType>
-  </xs:element>
 
   <xs:complexType name="templates">
     <xs:sequence>
