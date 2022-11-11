@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templateSetConfiguration xmlns="http://capgemini.com/devonfw/cobigen/TemplateSetConfiguration"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="6.0">
+  <contextConfiguration>
   <trigger id="crud_java_server_app" type="java">
     <containerMatcher type="package" value="((.+\.)?([^\.]+))\.([^\.]+)\.dataaccess\.api" retrieveObjectsRecursively="false" />
     <matcher type="fqn" value="((.+\.)?([^\.]+))\.([^\.]+)\.dataaccess\.api\.([^\.]+)Entity">
@@ -20,7 +21,9 @@
   <links>
     <link url="https://docs.spring.io/spring-data/data-commons/docs/1.6.1.RELEASE/reference/html/repositories.html"></link>
   </links>
+  </contextConfiguration>
   
+  <templatesConfiguration>
   <templates>
     <templateExtension ref="${variables.entityName}Entity.java" mergeStrategy="javamerge" />
     <templateExtension ref="${variables.entityName}.java" mergeStrategy="javamerge" />
@@ -91,5 +94,5 @@
       <templateRef ref="${variables.component#cap_first}SoapServiceImpl.java"/>
     </increment>-->
   </increments>
-
+</templatesConfiguration>
 </templateSetConfiguration>
