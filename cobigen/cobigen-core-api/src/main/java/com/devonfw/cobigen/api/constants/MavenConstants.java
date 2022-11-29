@@ -8,6 +8,8 @@ public class MavenConstants {
   /** Name of the text file which will contain all the needed URLs (classPath.txt) */
   public static String CLASSPATH_CACHE_FILE = "pom-cp-%s.txt";
 
+  public static String M2_REPO_SYSTEMVARIBLE = "M2_REPO";
+
   /** pom.xml */
   public static String POM = "pom.xml";
 

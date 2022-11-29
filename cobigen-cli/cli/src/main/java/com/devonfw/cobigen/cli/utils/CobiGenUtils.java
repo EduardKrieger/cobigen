@@ -55,11 +55,13 @@ public class CobiGenUtils {
   public static CobiGen initializeCobiGen(Path templatesProject, boolean allowMonolithicConfiguration) {
 
     registerPlugins();
+    CobiGen cg;
     if (templatesProject != null) {
-      return CobiGenFactory.create(templatesProject.toUri(), allowMonolithicConfiguration);
+      cg = CobiGenFactory.create(templatesProject.toUri(), allowMonolithicConfiguration);
     } else {
-      return CobiGenFactory.create(allowMonolithicConfiguration);
+      cg = CobiGenFactory.create(allowMonolithicConfiguration);
     }
+    return cg;
   }
 
   /**
