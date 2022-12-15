@@ -98,6 +98,7 @@ public class GenerateCommandIT extends AbstractCliTest {
       }
     }
     execute(args, true);
+    System.out.println("!!!! Cache Test  Ende !!!!");
   }
 
   /**
