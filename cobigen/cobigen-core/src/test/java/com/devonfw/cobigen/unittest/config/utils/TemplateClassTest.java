@@ -10,7 +10,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import com.devonfw.cobigen.impl.config.ConfigurationHolder;
 import com.devonfw.cobigen.impl.config.entity.TemplatePath;
@@ -22,8 +24,12 @@ import com.devonfw.cobigen.unittest.config.common.AbstractUnitTest;
  */
 public class TemplateClassTest extends AbstractUnitTest {
 
+  @Rule
+  public TemporaryFolder tmpFolder = new TemporaryFolder();
+
   /** Root path of the test resources */
   private static final String TEST_FILES_ROOT_PATH = "src/test/resources/testdata/unittest/config/entity/TemplateClassTest/";
+  // TODO add test for Sets
 
   /**
    * Tests if the template utility classes can be loaded from a configuration folder
@@ -39,6 +45,23 @@ public class TemplateClassTest extends AbstractUnitTest {
     List<Class<?>> classes = ConfigurationClassLoaderUtil.resolveUtilClasses(new ConfigurationHolder(path.toUri()),
         null);
     assertThat(classes.get(0).getName()).contains("IDGenerator");
+  }
+
+  /**
+   * Tests if the template utility classes can be loaded from a configuration folder
+   *
+   * @throws IOException test fails
+   */
+  @Test
+  public void testResolveUtilClassesFromTemplateSetFolder() throws IOException {
+
+    String filename = "TemplateSetfolder";
+    Path path = Paths.get(TEST_FILES_ROOT_PATH + filename);
+
+    List<Class<?>> classes = ConfigurationClassLoaderUtil.resolveUtilClasses(new ConfigurationHolder(path.toUri()),
+        null);
+    assertThat(classes.size()).isEqualTo(2);
+    // assertThat(classes.get(0).getName()).contains("JavaUtil");
   }
 
   /**
@@ -79,6 +102,49 @@ public class TemplateClassTest extends AbstractUnitTest {
     List<Class<?>> classes = ConfigurationClassLoaderUtil
         .resolveUtilClasses(new ConfigurationHolder(pathFolder.toUri()), inputClassLoader);
     assertThat(classes.get(0).getName()).contains("IDGenerator");
+  }
+
+  /**
+   * Todo
+   *
+   * @throws IOException test fails
+   */
+  @Test
+  public void testGetTemplateSetConfigurationFromFolder() throws Exception {
+
+    String filename = "TemplateSetfolder";
+
+    Path path = Paths.get(TEST_FILES_ROOT_PATH + filename);
+
+    ClassLoader inputClassLoader = URLClassLoader.newInstance(new URL[] { path.toUri().toURL() },
+        getClass().getClassLoader());
+
+    // URL url = ConfigurationClassLoaderUtil.getContextConfiguration(inputClassLoader);
+    List<URL> url = ConfigurationClassLoaderUtil.getTemplateSetConfiguration(inputClassLoader);
+    assertThat(url).isNotNull();
+    assertThat(url).doesNotContainNull();
+    assertThat(url).size().isEqualTo(2);
+  }
+
+  /**
+   * Todo
+   *
+   * @throws IOException test fails
+   */
+  @Test
+  public void testGetTemplateSetConfigurationFromArchive() throws Exception {
+
+    File downloaded = this.tmpFolder.newFolder("downloaded");
+    // TODO den download von den jars
+    String filename = "archive";
+    // TODO get jars from templates and copy into a new folder. use at least 2 than use this function
+
+    Path path = Paths.get(TEST_FILES_ROOT_PATH + filename);
+
+    ClassLoader inputClassLoader = URLClassLoader.newInstance(new URL[] { path.toUri().toURL() },
+        getClass().getClassLoader());
+    List<URL> url = ConfigurationClassLoaderUtil.getTemplateSetConfiguration(inputClassLoader);
+    assertThat(url).isNotNull();
   }
 
   /**

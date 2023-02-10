@@ -1,7 +1,11 @@
 package com.devonfw.cobigen.impl.util;
 
+import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.FileVisitResult;
@@ -10,10 +14,14 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
@@ -35,6 +43,13 @@ public class ConfigurationClassLoaderUtil {
 
   /** Locations to check for context.xml */
   private static final String[] configFileLocations = new String[] { "context.xml", "src/main/templates/context.xml" };
+
+  /// ** Locations to check for template utility classes */
+  // private static final String[] templateSetClassFolderLocations = new String[] { "target/classes" };
+
+  /** Locations to check for context.xml */
+  private static final String[] templateSetConfigFileLocations = new String[] { "/template-set.xml",
+  "src/main/templates/template-set.xml" };
 
   /**
    * Checks the ClassLoader for any context.xml provided either in configurationFolder or in templates-plugin and
@@ -60,6 +75,77 @@ public class ConfigurationClassLoaderUtil {
       throw new InvalidConfigurationException("No context.xml could be found in the classpath!");
     }
     return contextConfigurationLocation;
+  }
+
+  /**
+   * Checks the ClassLoader for any template-set.xml provided either in configurationFolder or in templates-plugin and
+   * returns its URL
+   *
+   * @param classLoader ClassLoader to check resources from
+   * @return URL of the context configuration file path
+   * @throws InvalidConfigurationException if no configuration file was found
+   * @throws IOException
+   * @throws URISyntaxException
+   */
+  public static List<URL> getTemplateSetConfiguration(ClassLoader classLoader)
+      throws InvalidConfigurationException, IOException, URISyntaxException {
+
+    List<URL> templateSetConfigurationLocation = new ArrayList<>();
+    List<URL> ressources = Collections.list(classLoader.getResources(""));
+    for (URL templateSet : ressources) {
+      File templateSetFolder = new File(templateSet.getPath());
+      if (templateSetFolder.isDirectory()) {
+        for (File f : templateSetFolder.listFiles()) {
+          if (f.isDirectory()) {
+            for (String possibleLocation : templateSetConfigFileLocations) {
+              possibleLocation = f.getName() + possibleLocation;
+              List<URL> configLocation = Collections.list(classLoader.getResources(possibleLocation));
+              if (configLocation.size() > 0) {
+                templateSetConfigurationLocation.addAll(configLocation);
+                for (URL url : configLocation) {
+                  LOG.debug("Found template-set.xml URL @ {}", url);
+                }
+              }
+            }
+          } else if (f.getName().endsWith(".jar")) {
+            System.out.println(f.getName());
+            List<URL> templateSetFromJar = Collections.list(classLoader.getResources(f.getName()));
+            Path test3 = f.toPath().resolve("template-set.xml");
+            File testFile = new File(test3.toUri());
+            if (testFile.exists()) {
+              templateSetConfigurationLocation.add(test3.toUri().toURL());
+            }
+            for (URL u : templateSetFromJar) {
+              System.out.println(u.toURI());
+              // FileSystem fs = FileSystemUtil.getOrCreateFileSystem(u.toURI());
+              Path fs2 = FileSystemUtil.createFileSystemDependentPath(u.toURI());
+              // Files.exists(fs2, null)
+              ZipFile zfile = new ZipFile(new File(u.toURI()));
+              ZipEntry tsf = zfile.getEntry("template-set.xml");
+              ZipEntry tsf2 = zfile.getEntry("functions.ftl");
+              ZipEntry tsf3 = zfile.getEntry("templates");
+              Path test = fs2.resolve("template-set.xml");
+              URL templateSetJar = u.toURI().resolve("template-set.xml").toURL();
+              InputStream in = new BufferedInputStream(templateSetJar.openStream(), 1024);
+              ZipInputStream stream = new ZipInputStream(in);
+              byte[] buffer = new byte[2024];
+              buffer = stream.readAllBytes();
+              // Path config = fs.getPath("/template-set.xml");
+              u = u.toURI().resolve("template-set.xml").toURL();
+              // File testFile = new File(u.toURI());
+              if (testFile.exists()) {
+                templateSetConfigurationLocation.add(u);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (templateSetConfigurationLocation.size() == 0) {
+      throw new InvalidConfigurationException("No template-set.xml could be found in the classpath!");
+    }
+    return templateSetConfigurationLocation;
   }
 
   /**
